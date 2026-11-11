@@ -20,11 +20,21 @@ export async function POST(req: NextRequest) {
     const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
     const parentFolderId = process.env.GOOGLE_DRIVE_PARENT_FOLDER_ID;
 
-    if (!clientEmail || !privateKey || !parentFolderId) {
-      return NextResponse.json(
-        { success: false, error: 'Konfigurasi ENV Google Drive belum lengkap di server.' },
-        { status: 500 }
-      );
+    const isPlaceholder =
+      !clientEmail ||
+      !privateKey ||
+      !parentFolderId ||
+      privateKey.includes('ISI_PRIVATE_KEY_ANDA_DI_SINI') ||
+      clientEmail.includes('nama-service-account') ||
+      parentFolderId.includes('ID_FOLDER_UTAMA_ANDA');
+
+    if (isPlaceholder) {
+      return NextResponse.json({
+        success: false,
+        isPlaceholder: true,
+        error:
+          'Kredensial Google Service Account di .env.local masih berupa placeholder template. Silakan masukkan key asli untuk mengaktifkan cloud upload.',
+      });
     }
 
     // 1. Autentikasi Google Service Account
